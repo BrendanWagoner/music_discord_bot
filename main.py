@@ -108,35 +108,6 @@ async def leave(ctx):
         await ctx.send("The bot is not connected to a voice channel.")
 # TODO create a pause, and resume feature
 # TODO delete all the client commands
-
-
-@client.event
-async def on_ready():
-    print(f'We have logged in as {client.user}')
-
-
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
-
-    if message.content.startswith('$kolton'):
-        await message.channel.send('dont ever type this command in again')
-
-    if message.content.startswith('$sus'):
-        await message.channel.send('kill you are self')
-
-    if message.content.startswith('$amogus'):
-        for x in range(5):
-            await message.channel.send('<@134461127533920258>')
-
-
-@client.event
-async def on_message_delete(message):
-    await message.channel.send('pussy')
 # TODO clean everything up, make it look more presentable
 # client.run(token)
 
