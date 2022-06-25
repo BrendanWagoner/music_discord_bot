@@ -1,12 +1,15 @@
+import os
+
 import youtube_dl
 import discord
 from discord.ext import commands, tasks
 import asyncio
 import logging
+import os
 import pydirectory
 
 
-token = "OTg4OTMzMTg0OTYyMDY0NDg0.G4ZVk4.dacZzxGCkEjBbETscG-3KCMwUrREg-PmGhTg2g"
+token = os.environ['DISCORD_TOKEN']
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
