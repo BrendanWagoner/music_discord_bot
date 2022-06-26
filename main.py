@@ -1,12 +1,9 @@
-import os
-
 import youtube_dl
 import discord
 from discord.ext import commands, tasks
 import asyncio
 import logging
 import os
-import pydirectory
 
 
 token = os.environ['DISCORD_TOKEN']
@@ -18,7 +15,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
-    'outtmpl': 'C:/Users/shado/Desktop/SONGS from disc%(title)s-%(id)s.%(ext)s',
+    'outtmpl': 'C:/Users/shado/PycharmProjects/discord_bot.py/downloads/%(title)s-%(id)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -86,6 +83,24 @@ async def play(ctx, url):
         await ctx.send('The bot is not connected.')
 
 
+@bot.command(name='pause', help='tells bot to pause current music playing')
+async def pause(ctx):
+    voice_channel = ctx.message.guild.voice_client
+    if voice_channel.is_playing():
+        await voice_channel.pause()
+    else:
+        await ctx.send('Nothing is currently playing.')
+
+
+@bot.command(name='resume', help='tells bot to resume currently paused song')
+async def resume(ctx):
+    voice_channel = ctx.message.guild.voice_client
+    if voice_channel.is_paused:
+        await voice_channel.resume()
+    else:
+        await ctx.send('nothing is paused.')
+
+
 @bot.command(name='stop', help='tells bot to join voice channel if not connected, and plays selected url or song')
 async def stop(ctx):
     server = ctx.message.guild
@@ -94,7 +109,7 @@ async def stop(ctx):
     if voice_client.is_playing():
         await voice_channel.stop()
     else:
-        ctx.send('The bot is not playing anything')
+        await ctx.send('The bot is not playing anything')
 
 
 @bot.command(name='leave', help='To make the bot leave the voice channel')
@@ -106,12 +121,10 @@ async def leave(ctx):
         # await channel.disconnect()
     else:
         await ctx.send("The bot is not connected to a voice channel.")
-# TODO create a pause, and resume feature
-# TODO delete all the client commands
-# TODO clean everything up, make it look more presentable
-# client.run(token)
+
 
 if __name__ == "__main__":
     bot.run(token)
 
 # TODO add and create things that are interesting or fun, expand.
+# TODO clean everything up, make it look more presentable
