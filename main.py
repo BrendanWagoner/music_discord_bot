@@ -1,4 +1,4 @@
-import youtube_dl
+import yt_dlp
 import discord
 from discord.ext import commands, tasks
 import asyncio
@@ -11,10 +11,10 @@ intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 bot = commands.Bot(command_prefix='!', intents=intents)
-youtube_dl.utils.bug_reports_message = lambda: ''
+yt_dlp.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
-    'format': 'bestaudio/best',
+    'format': 'worstaudio/worst',
     'outtmpl': 'C:/Users/shado/PycharmProjects/discord_bot.py/downloads/%(title)s-%(id)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
@@ -31,7 +31,7 @@ ffmpeg_options = {
     'options': '-vn'
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -52,6 +52,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return filename
 
 
+url_queue = []
+
+
 @bot.event
 async def on_ready():
     print('Bot is ready to go!')
@@ -69,25 +72,30 @@ async def join(ctx):
 
 @bot.command(name='play', help='tells bot to join voice channel if not connected, and plays selected url or song')
 async def play(ctx, url):
+    global url_queue
     voice_client = ctx.message.guild.voice_client
-    if voice_client.is_connected():
-
-        server = ctx.message.guild
-        voice_channel = server.voice_client
-
-        async with ctx.typing():
-            filename = await YTDLSource.from_url(url, loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
-        await ctx.send('This is playing : {}'.format(filename))
+    if voice_client.is_playing():
+        await queue(ctx, url)
     else:
-        await ctx.send('The bot is not connected.')
+        if url not in url_queue:
+            url_queue.append(url)
+        if voice_client.is_connected():
+            server = ctx.message.guild
+            voice_channel = server.voice_client
+            async with ctx.typing():
+                filename = await YTDLSource.from_url(url_queue[0], loop=bot.loop)
+                voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
+            await ctx.send('This is playing {}'.format(url))
+            del url_queue[0]
+        else:
+            await ctx.send('The bot is not connected.')
 
 
 @bot.command(name='pause', help='tells bot to pause current music playing')
 async def pause(ctx):
     voice_channel = ctx.message.guild.voice_client
     if voice_channel.is_playing():
-        await voice_channel.pause()
+        voice_channel.pause()
     else:
         await ctx.send('Nothing is currently playing.')
 
@@ -96,7 +104,7 @@ async def pause(ctx):
 async def resume(ctx):
     voice_channel = ctx.message.guild.voice_client
     if voice_channel.is_paused:
-        await voice_channel.resume()
+        voice_channel.resume()
     else:
         await ctx.send('nothing is paused.')
 
@@ -107,24 +115,63 @@ async def stop(ctx):
     voice_channel = server.voice_client
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_playing():
-        await voice_channel.stop()
+        voice_channel.stop()
     else:
         await ctx.send('The bot is not playing anything')
 
 
 @bot.command(name='leave', help='To make the bot leave the voice channel')
 async def leave(ctx):
-    # channel = ctx.message.author.voice.channel
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_connected():
         await voice_client.disconnect()
-        # await channel.disconnect()
     else:
         await ctx.send("The bot is not connected to a voice channel.")
+
+
+@bot.command(name='queue', help='queue songs to play one after another')
+async def queue(ctx, url):
+    global url_queue
+    url_queue.append(url)
+    await ctx.send('{} has been added to he playlist!'.format(url))
+
+
+@bot.command(name='playnext', help='will play the next song in the queue')
+async def play_next(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if len(url_queue) >= 1:
+        if voice_client.is_connected():
+            server = ctx.message.guild
+            voice_channel = server.voice_client
+            async with ctx.typing():
+                filename = await YTDLSource.from_url(url_queue[0], loop=bot.loop)
+                voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
+            await ctx.send('The next song is now playing')
+            del url_queue[0]
+        else:
+            await ctx.send('You are not connected to a channel right now.')
+    else:
+        await ctx.send('Nothing is in the queue right now.')
+
+
+@bot.command(name='skip', help='skips song to the next in queue')
+async def skip(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_playing():
+        voice_client.stop()
+        await play_next(ctx)
+    else:
+        await ctx.send('Nothing is playing right now, queue something up!')
+
+
+@bot.command(name='view', help='views what songs are inside the queue')
+async def view(ctx):
+    await ctx.send('your queue is now {}'.format(url_queue))
 
 
 if __name__ == "__main__":
     bot.run(token)
 
-# TODO add and create things that are interesting or fun, expand.
+# TODO fix the queue system, and add a skip command
+# TODO need to make a file management script
 # TODO clean everything up, make it look more presentable
