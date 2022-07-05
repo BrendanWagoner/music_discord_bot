@@ -12,6 +12,8 @@ Once inviting the bot to the respective Discord server, you can use it. The bot 
 
 **!skip**: Stops current song, then plays the next one. 
 
+**!playnext**: plays the next song in queue
+
 **!view**: Shows current queue 
 
 **!pause**: Pauses the current song playing.
@@ -19,6 +21,10 @@ Once inviting the bot to the respective Discord server, you can use it. The bot 
 **!resume**: Resumes current song playing
 
 **!stop**: Permanently stops song *(not the same as pause, after using this you have to use the play command again)*
+
+# Known Issues
+
+
 
 # Contributor
 
